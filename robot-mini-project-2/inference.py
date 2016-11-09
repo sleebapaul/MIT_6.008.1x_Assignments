@@ -96,7 +96,7 @@ def forward_backward(observations):
 
     num_time_steps = len(observations)
     forward_messages = [None] * num_time_steps
-    forward_messages[0] = prior_distribution
+    forward_messages[0] = [prior_distribution]
 
     #if None is the observation
     none_observation_matrix= np.ones(shape=(a,1))
@@ -109,7 +109,7 @@ def forward_backward(observations):
         if observations[i-1]==None:
             index=0
             for j in range(len(all_possible_hidden_states)):
-                intermediate[j]=forward_messages[i-1][all_possible_hidden_states[j]]*none_observation_matrix[j][index]
+                intermediate[j]=forward_messages[i-1][0][all_possible_hidden_states[j]]*none_observation_matrix[j][index]
             for k in range(len(all_possible_hidden_states)):
                 for l in range(len(all_possible_hidden_states)):
                     iteration_sum[l]=intermediate[k]*transition_matrix[k][l]
@@ -119,7 +119,7 @@ def forward_backward(observations):
             x,y=observations[i-1]
             index=all_possible_observed_states.index((x,y))
             for j in range(len(all_possible_hidden_states)):
-                intermediate[j]=forward_messages[i-1][all_possible_hidden_states[j]]*observation_matrix[j][index]
+                intermediate[j]=forward_messages[i-1][0][all_possible_hidden_states[j]]*observation_matrix[j][index]
             for k in range(len(all_possible_hidden_states)):
                 for l in range(len(all_possible_hidden_states)):
                         iteration_sum[l]=intermediate[k]*transition_matrix[k][l]
@@ -132,7 +132,7 @@ def forward_backward(observations):
         forward_messages[i]=[message]
     
     backward_messages = [None] * num_time_steps
-    backward_messages[num_time_steps-1]=prior_backward
+    backward_messages[num_time_steps-1]=[prior_backward]
     # TODO: Compute the backward messages\
     for i in range(num_time_steps-1,0,-1):
         iteration_sum=[0] * len(all_possible_hidden_states)
@@ -142,7 +142,7 @@ def forward_backward(observations):
         if observations[i]==None:
             index=0
             for j in range(len(all_possible_hidden_states)):
-                intermediate[j]=backward_messages[i][all_possible_hidden_states[j]]*none_observation_matrix[j][index]
+                intermediate[j]=backward_messages[i][0][all_possible_hidden_states[j]]*none_observation_matrix[j][index]
             for k in range(len(all_possible_hidden_states)):
                 for l in range(len(all_possible_hidden_states)):
                         iteration_sum[l]=intermediate[k]*back_transition_matrix[k][l]
@@ -152,7 +152,7 @@ def forward_backward(observations):
             x,y=observations[i-1]
             index=all_possible_observed_states.index((x,y))
             for j in range(len(all_possible_hidden_states)):
-                intermediate[j]=backward_messages[i][all_possible_hidden_states[j]]*observation_matrix[j][index]
+                intermediate[j]=backward_messages[i][0][all_possible_hidden_states[j]]*observation_matrix[j][index]
             for k in range(len(all_possible_hidden_states)):
                 for l in range(len(all_possible_hidden_states)):
                         iteration_sum[l]=intermediate[k]*back_transition_matrix[k][l]

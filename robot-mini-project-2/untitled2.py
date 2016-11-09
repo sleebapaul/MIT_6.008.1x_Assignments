@@ -40,7 +40,7 @@ final_sum=[0] * len(all_possible_hidden_states)
 message=robot.Distribution()
 num_time_steps=1
 forward_messages = [None] * num_time_steps
-forward_messages[0] = [prior_matrix]
+forward_messages[0] = prior_matrix
 if observations==None:
     index=0
     for j in range(len(all_possible_hidden_states)):
@@ -54,7 +54,7 @@ else:
     x,y=(8,3)
     index=all_possible_observed_states.index((x,y))
     for j in range(len(all_possible_hidden_states)):
-        intermediate[j]=forward_messages[0][0][all_possible_hidden_states[j]]*observation_matrix[j][index]
+        intermediate[j]=forward_messages[0][all_possible_hidden_states[j]]*observation_matrix[j][index]
     for k in range(len(all_possible_hidden_states)):
         for l in range(len(all_possible_hidden_states)):
             iteration_sum[l]=intermediate[k]*transition_matrix[k][l]
