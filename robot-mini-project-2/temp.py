@@ -57,7 +57,7 @@ back_transition_matrix=np.transpose(transition_matrix)
 
 prior_backward=robot.Distribution()
 for i in all_possible_hidden_states:
-    prior_backward[i]=1/440
+    prior_backward[i]=1/len(all_possible_hidden_states)
 
     
 # You may find this function helpful for computing logs without yielding a
@@ -96,7 +96,7 @@ def forward_backward(observations):
 
     num_time_steps = len(observations)
     forward_messages = [None] * num_time_steps
-    forward_messages[0] = prior_distribution
+    forward_messages[0] = [prior_distribution]
 
     #if None is the observation
     none_observation_matrix= np.ones(shape=(a,1))
@@ -109,7 +109,7 @@ def forward_backward(observations):
         if observations[i-1]==None:
             index=0
             for j in range(len(all_possible_hidden_states)):
-                intermediate[j]=forward_messages[i-1][all_possible_hidden_states[j]]*none_observation_matrix[j][index]
+                intermediate[j]=forward_messages[i-1][0][all_possible_hidden_states[j]]*none_observation_matrix[j][index]
             for k in range(len(all_possible_hidden_states)):
                 for l in range(len(all_possible_hidden_states)):
                     iteration_sum[l]=intermediate[k]*transition_matrix[k][l]
@@ -119,7 +119,7 @@ def forward_backward(observations):
             x,y=observations[i-1]
             index=all_possible_observed_states.index((x,y))
             for j in range(len(all_possible_hidden_states)):
-                intermediate[j]=forward_messages[i-1][all_possible_hidden_states[j]]*observation_matrix[j][index]
+                intermediate[j]=forward_messages[i-1][0][all_possible_hidden_states[j]]*observation_matrix[j][index]
             for k in range(len(all_possible_hidden_states)):
                 for l in range(len(all_possible_hidden_states)):
                         iteration_sum[l]=intermediate[k]*transition_matrix[k][l]
@@ -132,7 +132,7 @@ def forward_backward(observations):
         forward_messages[i]=[message]
     
     backward_messages = [None] * num_time_steps
-    backward_messages[num_time_steps-1]=prior_backward
+    backward_messages[num_time_steps-1]=[prior_backward]
     # TODO: Compute the backward messages\
     for i in range(num_time_steps-1,0,-1):
         iteration_sum=[0] * len(all_possible_hidden_states)
@@ -142,17 +142,17 @@ def forward_backward(observations):
         if observations[i]==None:
             index=0
             for j in range(len(all_possible_hidden_states)):
-                intermediate[j]=backward_messages[i][all_possible_hidden_states[j]]*none_observation_matrix[j][index]
+                intermediate[j]=backward_messages[i][0][all_possible_hidden_states[j]]*none_observation_matrix[j][index]
             for k in range(len(all_possible_hidden_states)):
                 for l in range(len(all_possible_hidden_states)):
                         iteration_sum[l]=intermediate[k]*back_transition_matrix[k][l]
                 for m in range(len(all_possible_hidden_states)):
                         final_sum[m]=final_sum[m]+iteration_sum[m]
         else:
-            x,y=observations[i-1]
+            x,y=observations[i]
             index=all_possible_observed_states.index((x,y))
             for j in range(len(all_possible_hidden_states)):
-                intermediate[j]=backward_messages[i][all_possible_hidden_states[j]]*observation_matrix[j][index]
+                intermediate[j]=backward_messages[i][0][all_possible_hidden_states[j]]*observation_matrix[j][index]
             for k in range(len(all_possible_hidden_states)):
                 for l in range(len(all_possible_hidden_states)):
                         iteration_sum[l]=intermediate[k]*back_transition_matrix[k][l]
@@ -189,7 +189,7 @@ def forward_backward(observations):
             if i==0:
                 for j in range(len(all_possible_hidden_states)):
                     marginal_distribution[all_possible_hidden_states[j]]=observation_matrix[j][index]*backward_messages[0][0][all_possible_hidden_states[j]]
-            elif i==num_time_steps-1:
+            if i==num_time_steps-1:
                 for j in range(len(all_possible_hidden_states)):
                     marginal_distribution[all_possible_hidden_states[j]]=observation_matrix[j][index]*forward_messages[num_time_steps-1][0][all_possible_hidden_states[j]]   
         marginals[i]=marginal_distribution
@@ -315,7 +315,7 @@ def main():
             generate_data(num_time_steps,
                           make_some_observations_missing)
     print('Running forward-backward...')
-    marginals = forward_backward(observations)
+    marginals = forward_backward([(4, 3), (4, 2), (3, 2), (4, 0), (2, 0), (2, 0), (3, 2), (4, 2), (2, 3), (3, 5)])
     print("\n")
 
     timestep = 2

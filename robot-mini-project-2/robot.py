@@ -136,7 +136,7 @@ def transition_model(state):
     # given a hidden state, return the Distribution for the next hidden state
     x, y, action = state
     next_states = Distribution()
-
+    
     # we can always stay where we are
     if action == 'stay':
         next_states[(x, y, 'stay')] = .2
