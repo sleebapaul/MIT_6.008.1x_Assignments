@@ -21,7 +21,23 @@ def get_counts(file_list):
     key occurred in.
     """
     ### TODO: Comment out the following line and write your code here
-    raise NotImplementedError
+    #raise NotImplementedError
+    words=[[] for i in range(len(file_list))]
+    out={}
+    for i in range(len(file_list)):
+        file_name=file_list[i]
+        words[i]=util.get_words_in_file(file_name)
+        words[i]=np.unique(words[i])
+    flattened_list=[item for sublist in words for item in sublist]
+    flattened_list=np.unique(flattened_list)
+    for i in range(len(flattened_list)):
+        count=0
+        for j in range(len(file_list)):
+            if flattened_list[i] in words[j]:
+                count=count+1
+        out[flattened_list[i]]=count
+    return out
+        
 
 def get_log_probabilities(file_list):
     """
@@ -44,8 +60,13 @@ def get_log_probabilities(file_list):
     get_counts() helper above.
     """
     ### TODO: Comment out the following line and write your code here
-    raise NotImplementedError
-
+    #raise NotImplementedError
+    out=get_counts (file_list)
+    length_file_list=len(file_list)
+    out_log={}
+    for i in out:
+        out_log[i]=np.log((out[i]+1)/(length_file_list+2))
+    return out_log
 
 def learn_distributions(file_lists_by_category):
     """
@@ -68,8 +89,17 @@ def learn_distributions(file_lists_by_category):
                             [est. for log P(c=spam), est. for log P(c=ham)]
     """
     ### TODO: Comment out the following line and write your code here
-    raise NotImplementedError
-
+    #raise NotImplementedError
+    file_list_spam=file_lists_by_category[0]
+    q_cap=get_log_probabilities(file_list_spam)
+    file_list_ham=file_lists_by_category[1]
+    p_cap=get_log_probabilities(file_list_ham)
+    log_probabilities_by_category=[q_cap,p_cap]
+    s_cap_spam=np.log(len(file_list_spam)/(len(file_list_spam)+len(file_list_ham)))
+    s_cap_ham=np.log(len(file_list_ham)/(len(file_list_spam)+len(file_list_ham)))
+    log_prior_by_category=[s_cap_spam,s_cap_ham]
+    return log_probabilities_by_category,  log_prior_by_category
+    
 def classify_email(email_filename,
                    log_probabilities_by_category,
                    log_prior_by_category):
@@ -89,8 +119,23 @@ def classify_email(email_filename,
     One of the labels in names.
     """
     ### TODO: Comment out the following line and write your code here
-    return 'spam'
-
+    #return 'spam'
+    words=util.get_words_in_file(email_filename)
+    q=1
+    p=1
+    for i in words:
+        if i in log_probabilities_by_category[0].keys():
+            q=q*log_probabilities_by_category[0][i]
+        if i in log_probabilities_by_category[1].keys():
+            p=p*log_probabilities_by_category[1][i]
+        else:
+            p=p*-1*np.log(len(words)+ 2)
+            q=q*-1*np.log(len(words) + 2)
+    log_odd_ratio=q-p+log_prior_by_category[0]-log_prior_by_category[1]
+    if log_odd_ratio>=0:
+        return 'spam'
+    else:
+        return 'ham'
 def classify_emails(spam_files, ham_files, test_files):
     # DO NOT MODIFY -- used by the autograder
     log_probabilities_by_category, log_prior = \
@@ -105,9 +150,9 @@ def classify_emails(spam_files, ham_files, test_files):
 def main():
     ### Read arguments
     if len(sys.argv) != 4:
-        print USAGE % sys.argv[0]
-    testing_folder = sys.argv[1]
-    (spam_folder, ham_folder) = sys.argv[2:4]
+        print(USAGE % sys.argv[0])
+        testing_folder = 'data/testing/'
+        (spam_folder, ham_folder) = ['data/spam/', 'data/ham/']
 
     ### Learn the distributions
     file_lists = []
